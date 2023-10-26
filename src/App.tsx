@@ -16,13 +16,19 @@ function App() {
   };
 
   const handleSubmitGame = (score: number) => {
-    setFinalScore(score);
-    setIsSumittedScreen(true);
-    setIsInGameScreen(false);
+    if(window.confirm('Do you want to submit answers ?')) {
+      setFinalScore(score);
+      setIsSumittedScreen(true);
+      setIsInGameScreen(false);
+    }
   }
   const handlerReviewClicked = () => {
     setIsReviewedMode(true);
     setIsInGameScreen(true);
+    setIsSumittedScreen(false);
+  }
+  const handlerRestartClicked = () => {
+    setIsStartScreen(true);
     setIsSumittedScreen(false);
   }
   
@@ -30,9 +36,10 @@ function App() {
     <div className="App">
       {isStartScreen && <StartGameScreen onClickStart={handleClickStart} />}
       {isInGameScreen && <InGameScreen onSubmit={handleSubmitGame} isReviewedMode={isReviewedMode} />}
-      {isSumittedScreen && <EndGameScreen score={finalScore} onReviewClicked={handlerReviewClicked}/>}
+      {isSumittedScreen && <EndGameScreen score={finalScore} onReviewClicked={handlerReviewClicked } onRestartClicked={handlerRestartClicked}/>}
     </div>
   );
 }
 
 export default App;
+ 

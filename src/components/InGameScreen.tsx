@@ -7,7 +7,7 @@ interface Props {
   isReviewedMode: boolean;
 }
 
-const InGameScreen = ({ onSubmit, isReviewedMode } : Props) => {
+const InGameScreen = ({ onSubmit, isReviewedMode }: Props) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [timer, setTimer] = useState(90);
@@ -19,6 +19,8 @@ const InGameScreen = ({ onSubmit, isReviewedMode } : Props) => {
 
     if (timer === 0) {
       clearInterval(countDown);
+      const finalScore = selectedAnswer ? 1 : 0;
+      onSubmit(finalScore)
     }
     return () => clearInterval(countDown);
   }, [timer]);
@@ -47,9 +49,12 @@ const InGameScreen = ({ onSubmit, isReviewedMode } : Props) => {
   const renderAnswers = () => {
     const question = question_content[currentQuestion];
     return question.answers.map((answer) => (
-      <StyledAnswer isReviewedMode={isReviewedMode}
+      <StyledAnswer
+        isReviewedMode={isReviewedMode}
         key={answer.answer_content}
-        className={`answer ${selectedAnswer === answer.answer_content ? "selected" : ""}`}
+        className={`answer ${
+          selectedAnswer === answer.answer_content ? "selected" : ""
+        }`}
         onClick={() => handleAnswerSelect(answer.answer_content)}
       >
         {answer.answer_content}
@@ -59,17 +64,19 @@ const InGameScreen = ({ onSubmit, isReviewedMode } : Props) => {
 
   return (
     <StyledContainer>
-      <div>Question {currentQuestion + 1}/{question_content.length}</div>
+      <div>
+        Question {currentQuestion + 1}/{question_content.length}
+      </div>
       <div>{question_content[currentQuestion].question_content}</div>
-      <div onMouseEnter={() => (selectedAnswer ? "" : "")}>{renderAnswers()}</div>
+      <div onMouseEnter={() => (selectedAnswer ? "" : "")}>
+        {renderAnswers()}
+      </div>
       <div className="timer">Timer: {timer}s</div>
       <div>
-        <button disabled={currentQuestion === 0} onClick={handlePrevious}>
-          Previous
+        <button onClick={handlePrevious}>
+          {currentQuestion === 0 ? "Previous" : "Next"}
         </button>
-        <button disabled={currentQuestion === question_content.length - 1} onClick={handleNext}>
-          Next
-        </button>
+
         <button onClick={handleSubmit}>
           {currentQuestion === question_content.length - 1 ? "Submit" : "Next"}
         </button>
@@ -80,8 +87,17 @@ const InGameScreen = ({ onSubmit, isReviewedMode } : Props) => {
 
 export default InGameScreen;
 
-const StyledContainer = styled.div``
+const StyledContainer = styled.div``;
 
 const StyledAnswer = styled.div<{isReviewedMode: boolean}>`
   color: ${props => (props.isReviewedMode ? 'white' : `blue`)};
+  width: 40rem;
+    height: 4rem;
+    padding: 0 1rem;
+    border-width: 2px ;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    margin: 0.75rem auto;
 `
+
+

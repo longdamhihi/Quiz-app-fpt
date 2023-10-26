@@ -4,17 +4,15 @@ import styled from "styled-components";
 interface EndGameScreenProps {
   score: number;
   onReviewClicked: () => void;
+  onRestartClicked: () => void;
 }
 
-const EndGameScreen = ({ onReviewClicked, score } : EndGameScreenProps) => {
-  const restartGame = () => {
-    //  logic to restart 
-  };
+const EndGameScreen = ({onRestartClicked, onReviewClicked, score } : EndGameScreenProps) => {
 
   return (
     <div>
       <Headline>Your Score is: {score}</Headline>
-      <RestartButton onClick={restartGame}>Try Again</RestartButton>
+      <RestartButton onClick={onRestartClicked}>Try Again</RestartButton>
       <ReviewButton onClick={onReviewClicked}>Review</ReviewButton>
     </div>
   );
