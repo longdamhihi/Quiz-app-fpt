@@ -4,16 +4,25 @@ import styled from "styled-components";
 import { IQuestion } from "../types/question";
 
 interface Props {
-  onSubmit: (finalScore: number) => void;
   isReviewedMode: boolean;
+  userAnswers: string[];
+  onSubmit: (selectedAnswers: string[], finalScore: number) => void;
+  onRestartClicked: () => void;
 }
 
-const InGameScreen = ({ onSubmit, isReviewedMode }: Props) => {
+const InGameScreen = ({
+  isReviewedMode,
+  userAnswers,
+  onSubmit,
+  onRestartClicked,
+}: Props) => {
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>(
+    new Array(question_content.length).fill("")
+  );
   const [timer, setTimer] = useState<number>(90);
   const [score, setScore] = useState<number>(0);
+  const [activeButton, setActiveButton] = useState<number | null>(null);
 
   useEffect(() => {
     const countDown = setInterval(() => {
@@ -22,39 +31,43 @@ const InGameScreen = ({ onSubmit, isReviewedMode }: Props) => {
 
     if (timer === 0 && score) {
       clearInterval(countDown);
-      onSubmit(score);
+      onSubmit(selectedAnswers, score);
     }
     return () => clearInterval(countDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timer]);
 
-  const handlePrevious = () => {
-    setCurrentQuestion((prevQuestion) => prevQuestion - 1);
-  };
+  const isButtonActive = (buttonId: number) => activeButton === buttonId;
 
-  const handleNext = () => {
-    setCurrentQuestion((prevQuestion) => prevQuestion + 1);
-  };
-
-  const handleAnswerSelect = (answer: string) => {
-    setSelectedAnswer(answer);
+  const handleAnswerSelect = (index: number, selectedAnswer: string) => {
+    setActiveButton(index);
+    const newSelectedAnswers = [...selectedAnswers];
+    newSelectedAnswers[index] = selectedAnswer;
+    setSelectedAnswers(newSelectedAnswers);
     const currentContext: IQuestion | undefined = question_content.find(
       (x) => Number(x.id) - 1 === currentQuestion
     );
     if (
       currentContext?.answers.find(
-        (y) => y.answer_content === answer && y.correct
+        (y) => y.answer_content === selectedAnswer && y.correct
       )
     ) {
       setScore(score + 1);
     }
   };
 
+  const handlePrevious = () => {
+    setActiveButton(null);
+    setCurrentQuestion((prevQuestion) => prevQuestion - 1);
+  };
+
+  const handleNext = () => {
+    setActiveButton(null);
+    setCurrentQuestion((prevQuestion) => prevQuestion + 1);
+  };
+
   const handleSubmit = () => {
-    if (currentQuestion === question_content.length - 1) { 
-      onSubmit(score);
-    } else {
-      handleNext();
-    }
+    onSubmit(selectedAnswers, score);
   };
 
   const renderAnswers = () => {
@@ -63,20 +76,20 @@ const InGameScreen = ({ onSubmit, isReviewedMode }: Props) => {
       <StyledAnswer
         isReviewedMode={isReviewedMode}
         isCorrect={answer.correct}
-        isSelected={answer.answer_content === selectedAnswer}
-        disabled={isReviewedMode}
-        onClick={() => handleAnswerSelect(answer.answer_content)}
+        isSelected={answer.answer_content === userAnswers[index]}
+        isActive={isButtonActive(index)}
+        value={answer.answer_content}
+        onClick={(e) => handleAnswerSelect(index, e.currentTarget.value)}
       >
-        {index + 1}) {answer.answer_content}
+        {index + 1})&nbsp;{answer.answer_content}
       </StyledAnswer>
     ));
   };
 
   return (
     <StyledContainer>
-      <StyledButton>
+      <StyledButtonContainer>
         <StyledButtonPrevious
-          className="btn"
           disabled={currentQuestion === 0}
           onClick={handlePrevious}
         >
@@ -90,25 +103,29 @@ const InGameScreen = ({ onSubmit, isReviewedMode }: Props) => {
           Next
         </StyledButtonNext>
 
-        {currentQuestion === question_content.length - 1 ? (
+        {isReviewedMode ? (
+          <StyledRestartButton onClick={onRestartClicked}>
+            Try Again
+          </StyledRestartButton>
+        ) : currentQuestion === question_content.length - 1 ? (
           <StyledButtonSubmit onClick={handleSubmit}>Submit</StyledButtonSubmit>
         ) : (
           <></>
         )}
-      </StyledButton>
+      </StyledButtonContainer>
 
-      <StyledQuestion>
-        <StyledTimer className="timer">Timer: {timer}s</StyledTimer>
+      <StyledQuestionContainer>
+        <StyledTimer>Timer: {timer}s</StyledTimer>
 
-        <IndexQuestion>
+        <StyledQuestionIndex>
           Question {currentQuestion + 1}/{question_content.length}
-        </IndexQuestion>
-        <Question>
+        </StyledQuestionIndex>
+        <StyledQuestion>
           {question_content[currentQuestion].question_content}
-        </Question>
-      </StyledQuestion>
+        </StyledQuestion>
+      </StyledQuestionContainer>
 
-      <Answer>{renderAnswers()}</Answer>
+      <StyledAnswerContainer>{renderAnswers()}</StyledAnswerContainer>
     </StyledContainer>
   );
 };
@@ -119,11 +136,21 @@ const StyledContainer = styled.div``;
 
 const StyledAnswer = styled.button<{
   isReviewedMode: boolean;
+  isActive: boolean;
   isCorrect: boolean;
   isSelected: boolean;
 }>`
-  background-color: ${(props) => (!props.isReviewedMode ? "white" : props.isSelected ? "blue" : props.isCorrect ? " #10B981"  : "white" )};
-  color:${(props) => (!props.isReviewedMode ? "black" : props.isSelected ? "blue" : props.isCorrect ? " white"  : "black" )};
+  background-color: ${(props) =>
+    props.isReviewedMode
+      ? props.isCorrect
+        ? "#10B981"
+        : props.isSelected
+        ? "blue"
+        : "white"
+      : props.isActive
+      ? "blue"
+      : "white"};
+  color: "white";
   width: 40rem;
   height: 4rem;
   padding: 0 1rem;
@@ -132,27 +159,19 @@ const StyledAnswer = styled.button<{
   border-radius: 0.375rem;
   cursor: pointer;
   margin: 0.75rem auto;
-   &:hover {
-    background-color: #312e81;
-    color: white;
-  }
-  &:focus {
-    background-color: #312e81;
-    color: white;
-  }
-  &:active {
-    background-color: #312e81;
+  &:hover {
+    background-color: blue;
     color: white;
   }
 `;
 
-const Answer = styled.div`
+const StyledAnswerContainer = styled.div`
   font-weight: 500;
   line-height: 1.75rem;
   font-size: 1.125rem;
 `;
 
-const StyledButton = styled.div`
+const StyledButtonContainer = styled.div`
   display: flex;
   gap: 1rem;
   justify-content: center;
@@ -186,7 +205,7 @@ const StyledButtonSubmit = styled(BtnInGame)`
   background-color: rgb(245, 158, 11);
 `;
 
-const StyledQuestion = styled.div`
+const StyledQuestionContainer = styled.div`
   width: 45rem;
   height: 10rem;
   padding-top: 4rem;
@@ -197,7 +216,7 @@ const StyledQuestion = styled.div`
   border-radius: 0.375rem;
 `;
 
-const Question = styled.div`
+const StyledQuestion = styled.div`
   text-align: center;
   line-height: 1.75rem;
   font-size: 1.25rem;
@@ -212,10 +231,29 @@ const StyledTimeAndQuestion = styled.div`
   text-align: center;
 `;
 
-const IndexQuestion = styled(StyledTimeAndQuestion)`
+const StyledQuestionIndex = styled(StyledTimeAndQuestion)`
   color: rgb(67, 56, 202);
 `;
 
 const StyledTimer = styled(StyledTimeAndQuestion)`
   margin-bottom: 1rem;
+`;
+
+const StyledButtonEndGame = styled.button`
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1.125rem;
+  font-weight: 700;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: none;
+`;
+
+const StyledRestartButton = styled(StyledButtonEndGame)`
+  background-color: #6ed5b7;
+  &:hover {
+    color: white;
+    background-color: #6ed5b7;
+  }
 `;

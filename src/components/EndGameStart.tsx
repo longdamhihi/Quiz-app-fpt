@@ -7,20 +7,27 @@ interface EndGameScreenProps {
   onRestartClicked: () => void;
 }
 
-const EndGameScreen = ({onRestartClicked, onReviewClicked, score } : EndGameScreenProps) => {
-
+const EndGameScreen = ({
+  onRestartClicked,
+  onReviewClicked,
+  score,
+}: EndGameScreenProps) => {
   return (
     <div>
-      <Headline>Your Score is: {score}</Headline>
-      <StyledButton>
-      <RestartButton onClick={onRestartClicked}>Try Again</RestartButton>
-      <ReviewButton onClick={onReviewClicked}>Review</ReviewButton>
-      </StyledButton>
+      <StyledHeadline>Your Score is: {score}</StyledHeadline>
+      <StyledButtonContainer>
+        <StyledRestartButton onClick={onRestartClicked}>
+          Try Again
+        </StyledRestartButton>
+        <StyledReviewButton onClick={onReviewClicked}>
+          Review
+        </StyledReviewButton>
+      </StyledButtonContainer>
     </div>
   );
 };
 
-const Headline = styled.h1`
+const StyledHeadline = styled.h1`
   font-size: 1.875rem;
   line-height: 2.25rem;
   color: white;
@@ -28,23 +35,24 @@ const Headline = styled.h1`
   margin-top: 64px;
 `;
 
-const StyledButton = styled.div`
-    display: flex;
-    gap: 1rem;
-    justify-content:center;
-`
+const StyledButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
 
-const ButtonEndGame = styled.button`
+const StyledButtonEndGame = styled.button`
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
   font-size: 1.125rem;
   font-weight: 700;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border: none;
 `;
 
-const RestartButton = styled(ButtonEndGame)`
+const StyledRestartButton = styled(StyledButtonEndGame)`
   background-color: #6ed5b7;
   &:hover {
     color: white;
@@ -52,7 +60,7 @@ const RestartButton = styled(ButtonEndGame)`
   }
 `;
 
-const ReviewButton = styled(ButtonEndGame)`
+const StyledReviewButton = styled(StyledButtonEndGame)`
   background-color: #ef4444;
   color: white;
   &:hover {
